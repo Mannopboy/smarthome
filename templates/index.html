@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home</title>
+    <style>
+        .button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        button {
+            font-size: 24px;
+            padding: 20px 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="button">
+        <button id="toggleButton" onclick="toggle()">Turn On</button>
+    </div>
+
+    <script>
+        const socket = new WebSocket('ws://192.168.1.188:8001/echo');
+
+        socket.onopen = function() {
+            console.log("WebSocket ulanishi ochiq.");
+        };
+
+        socket.onmessage = function(event) {
+            console.log("Arduino'dan xabar: " + event.data);
+        };
+
+        socket.onclose = function() {
+            console.log("WebSocket ulanishi yopiq.");
+        };
+
+        let isOn = false;
+
+        function toggle() {
+            isOn = !isOn;
+            const status = isOn ? 'on' : 'off';
+            document.getElementById('toggleButton').textContent = isOn ? 'Turn Off' : 'Turn On';
+
+            fetch(`/toggle?status=${status}`)
+                .then(response => {
+                    if (response.ok) {
+                        console.log("Arduino'ga yuborildi:", status);
+                    }
+                })
+                .catch(error => console.error("Xatolik:", error));
+        }
+    </script>
+</body>
+</html>
