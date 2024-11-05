@@ -14,20 +14,30 @@ def index():
 @sock.route('/echo')
 def echo(sock):
     connections.append(sock)
-    while True:
-        data = sock.receive()
-        print(f"Olingan xabar: {data}")
-        for connection in connections:
-            if connection != sock:
-                connection.send(data)
+    try:
+        while True:
+            data = sock.receive()
+            print(f"Olingan xabar: {data}")
+            # Broadcast to all other connections
+            for connection in connections:
+                if connection != sock:
+                    connection.send(data)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        connections.remove(sock)  # Clean up on disconnect
 
 
 @app.route('/toggle')
 def toggle():
     message = 1 if request.args.get('status') == 'on' else 0
     for connection in connections:
-        print(message)
-        connection.send(message)
+        try:
+            print(message)
+            connection.send(message)
+        except Exception as e:
+            print(f"Failed to send message to connection: {e}")
+            connections.remove(connection)  # Clean up closed connection
     return 'Message sent', 200
 
 
