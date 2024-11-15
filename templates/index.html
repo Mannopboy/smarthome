@@ -3,55 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Home</title>
-    <style>
-        .button {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        button {
-            font-size: 24px;
-            padding: 20px 40px;
-        }
-    </style>
+    <title>Uy Boshqaruvi</title>
+    <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-    <div class="button">
-        <button id="toggleButton" onclick="toggle()">Turn On</button>
+<h1>Uy Xonalarini Boshqarish</h1>
+<div id="rooms-container">
+    <!-- Xonalar uchun tugmalar -->
+    <div class="room" id="mehmonxona">
+        <h2>Mehmonxona</h2>
+        <button onclick="toggleChiroq('mehmonxona')">Chiroqni Yoq/O'chir</button>
+        <button onclick="toggleEshik('mehmonxona')">Eshikni Och/Yop</button>
+        <p id="mehmonxona-chiroq">Chiroq: O'chirilgan</p>
+        <p id="mehmonxona-eshik">Eshik: Yopiq</p>
     </div>
+    <div class="room" id="oshxona">
+        <h2>Oshxona</h2>
+        <button onclick="toggleChiroq('oshxona')">Chiroqni Yoq/O'chir</button>
+        <button onclick="toggleEshik('oshxona')">Eshikni Och/Yop</button>
+        <p id="oshxona-chiroq">Chiroq: O'chirilgan</p>
+        <p id="oshxona-eshik">Eshik: Yopiq</p>
+    </div>
+    <!-- Qo'shimcha xonalar uchun shu joyda boshqa <div class="room"> bloklarini qo'shishingiz mumkin -->
+</div>
+<h1>Chiroq va Eshik Xabarlari</h1>
+<div id="messages"></div>
+<input type="text" id="messageInput" placeholder="Xabar yozing...">
+<button onclick="sendMessage()">Yuborish</button>
 
-    <script>
-        const socket = new WebSocket('ws://192.168.1.188:8001/echo');
+<script>
+    const socket = new WebSocket('ws://' + window.location.host + '/echo');
 
-        socket.onopen = function() {
-            console.log("WebSocket ulanishi ochiq.");
-        };
+    socket.onmessage = function (event) {
+        const messageBox = document.getElementById('messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message';
+        messageDiv.innerText = event.data;
+        messageBox.appendChild(messageDiv);
+    };
 
-        socket.onmessage = function(event) {
-            console.log("Arduino'dan xabar: " + event.data);
-        };
+    function sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value;
+        socket.send(message);
+        messageInput.value = ''; // Yuborganingizdan keyin maydonni tozalash
+    }
 
-        socket.onclose = function() {
-            console.log("WebSocket ulanishi yopiq.");
-        };
+    socket.onopen = function () {
+        console.log('WebSocket ulanishi ochildi.');
+    };
 
-        let isOn = false;
-
-        function toggle() {
-            isOn = !isOn;
-            const status = isOn ? 'on' : 'off';
-            document.getElementById('toggleButton').textContent = isOn ? 'Turn Off' : 'Turn On';
-
-            fetch(`/toggle?status=${status}`)
-                .then(response => {
-                    if (response.ok) {
-                        console.log("Arduino'ga yuborildi:", status);
-                    }
-                })
-                .catch(error => console.error("Xatolik:", error));
-        }
-    </script>
+    socket.onclose = function () {
+        console.log('WebSocket ulanishi yopildi.');
+    };
+</script>
+<script src="../static/script.js"></script>
 </body>
 </html>
